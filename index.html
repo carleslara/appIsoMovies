@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Llista de pel·lícules pendents</title>
+
+    <script>
+        // Funció per obtenir les pel·lícules del backend
+        async function getMovies() {
+            const response = await fetch('/movies');
+            const movies = await response.json();
+
+            const movieList = document.getElementById('movie-list');
+            movieList.innerHTML = '';
+
+            movies.forEach((movie) => {
+                const li = document.createElement('li');
+                li.textContent = movie.title;
+                movieList.appendChild(li);
+            });
+        }
+
+        // Funció per afegir una nova pel·lícula
+        async function addMovie() {
+            const movieInput = document.getElementById('movie-input');
+            const movieTitle = movieInput.value;
+
+            if (movieTitle.trim() === '') return;
+
+            const newMovie = { title: movieTitle };
+
+            const response = await fetch('/movies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newMovie)
+            });
+
+            if (response.ok) {
+                movieInput.value = '';
+                getMovies(); // Tornem a carregar les pel·lícules
+            } else {
+                alert('No s’ha pogut afegir la pel·lícula.');
+            }
+        }
+
+        window.onload = getMovies;
+    </script>
+</head>
+
+<body>
+    <h1>Llista de pel·lícules pendents</h1>
+
+    <input type="text" id="movie-input" placeholder="Escriu el títol de la pel·lícula...">
+    <button onclick="addMovie()">Afegir pel·lícula</button>
+
+    <ul id="movie-list"></ul>
+</body>
+
+</html>
