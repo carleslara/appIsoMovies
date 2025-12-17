@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Ruta per obtenir les pel·lícules des del fitxer JSON
+// Ruta per obtenir les pel·lícules
 app.get('/movies', (req, res) => {
     fs.readFile('movies.json', 'utf8', (err, data) => {
         if (err) {
@@ -23,23 +23,19 @@ app.post('/movies', express.json(), (req, res) => {
     const newMovie = req.body;
 
     fs.readFile('movies.json', 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).send('Error llegint el fitxer de pel·lícules.');
-        }
+        if (err) return res.status(500).send('Error llegint el fitxer de pel·lícules.');
 
         const movies = JSON.parse(data);
         movies.push(newMovie);
 
         fs.writeFile('movies.json', JSON.stringify(movies, null, 2), 'utf8', (err) => {
-            if (err) {
-                return res.status(500).send('Error escrivint al fitxer de pel·lícules.');
-            }
+            if (err) return res.status(500).send('Error escrivint al fitxer de pel·lícules.');
             res.status(201).send(newMovie);
         });
     });
 });
 
-// Ruta per actualitzar tota la llista de pel·lícules
+// Ruta per actualitzar tota la llista (toggle vist i eliminar)
 app.put('/movies', express.json(), (req, res) => {
     const updatedMovies = req.body;
     fs.writeFile('movies.json', JSON.stringify(updatedMovies, null, 2), 'utf8', (err) => {
