@@ -39,6 +39,15 @@ app.post('/movies', express.json(), (req, res) => {
     });
 });
 
+// Ruta per actualitzar tota la llista de pel·lícules
+app.put('/movies', express.json(), (req, res) => {
+    const updatedMovies = req.body;
+    fs.writeFile('movies.json', JSON.stringify(updatedMovies, null, 2), 'utf8', (err) => {
+        if (err) return res.status(500).send('Error actualitzant les pel·lícules.');
+        res.status(200).send(updatedMovies);
+    });
+});
+
 // Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

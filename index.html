@@ -5,32 +5,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Llista de pel·lícules pendents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            width: 300px;
+        }
+
+        li {
+            background: white;
+            margin: 5px 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        li.done {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        li button {
+            background: #e74c3c;
+            font-size: 14px;
+            padding: 5px 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Llista de pel·lícules pendents</h1>
+    <input type="text" id="movie-input" placeholder="Escriu el títol de la pel·lícula...">
+    <button onclick="addMovie()">Afegir pel·lícula</button>
+    <ul id="movie-list"></ul>
 
     <script>
-        // Funció per obtenir les pel·lícules del backend
         async function getMovies() {
             const response = await fetch('/movies');
             const movies = await response.json();
-
             const movieList = document.getElementById('movie-list');
             movieList.innerHTML = '';
 
-            movies.forEach((movie) => {
+            movies.forEach((movie, index) => {
                 const li = document.createElement('li');
                 li.textContent = movie.title;
+                if (movie.done) li.classList.add('done');
+
+                // Botó eliminar
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Eliminar';
+                deleteBtn.onclick = () => removeMovie(index);
+
+                // Fer toggle de "vist"
+                li.onclick = () => toggleDone(index);
+
+                li.appendChild(deleteBtn);
                 movieList.appendChild(li);
             });
         }
 
-        // Funció per afegir una nova pel·lícula
         async function addMovie() {
             const movieInput = document.getElementById('movie-input');
-            const movieTitle = movieInput.value;
+            const title = movieInput.value.trim();
+            if (!title) return;
 
-            if (movieTitle.trim() === '') return;
-
-            const newMovie = { title: movieTitle };
-
+            const newMovie = { title, done: false };
             const response = await fetch('/movies', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -39,23 +113,40 @@
 
             if (response.ok) {
                 movieInput.value = '';
-                getMovies(); // Tornem a carregar les pel·lícules
-            } else {
-                alert('No s’ha pogut afegir la pel·lícula.');
+                getMovies();
             }
+        }
+
+        async function toggleDone(index) {
+            const response = await fetch('/movies');
+            const movies = await response.json();
+            movies[index].done = !movies[index].done;
+
+            await fetch('/movies', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(movies)
+            });
+
+            getMovies();
+        }
+
+        async function removeMovie(index) {
+            const response = await fetch('/movies');
+            const movies = await response.json();
+            movies.splice(index, 1);
+
+            await fetch('/movies', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(movies)
+            });
+
+            getMovies();
         }
 
         window.onload = getMovies;
     </script>
-</head>
-
-<body>
-    <h1>Llista de pel·lícules pendents</h1>
-
-    <input type="text" id="movie-input" placeholder="Escriu el títol de la pel·lícula...">
-    <button onclick="addMovie()">Afegir pel·lícula</button>
-
-    <ul id="movie-list"></ul>
 </body>
 
 </html>
